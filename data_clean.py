@@ -66,6 +66,27 @@ df["survial_d30"] = my_survial_d30
 # category, income, race, insurance_class, sex: no missing values. Encoded
 # from raw columns rather than the dataset's pre-built dummies, which are
 # dropped below as redundant.
+#
+# category/income/race/insurance_class get an explicit reference category
+# instead of drop_first's default alphabetical pick, which produced
+# non-obvious baselines (income's reference was "$11-$25k", an artifact of
+# "$" sorting before "U", not the lowest bracket). Pinned to the most
+# common or most conventional level per variable: ARenalF (largest disease
+# category, 43% of patients), Under $11k (lowest income bracket), White
+# (largest race group), Private (largest insurance group, standard
+# reference in health insurance research).
+category_categories = ["ARenalF"] + sorted(v for v in df["category"].unique() if v != "ARenalF")
+df["category"] = pd.Categorical(df["category"], categories=category_categories)
+
+income_categories = ["Under $11k"] + sorted(v for v in df["income"].unique() if v != "Under $11k")
+df["income"] = pd.Categorical(df["income"], categories=income_categories)
+
+race_categories = ["White"] + sorted(v for v in df["race"].unique() if v != "White")
+df["race"] = pd.Categorical(df["race"], categories=race_categories)
+
+insurance_categories = ["Private"] + sorted(v for v in df["insurance_class"].unique() if v != "Private")
+df["insurance_class"] = pd.Categorical(df["insurance_class"], categories=insurance_categories)
+
 dummy_source_cols = ["category", "income", "race", "insurance_class", "sex"]
 df = pd.get_dummies(df, columns=dummy_source_cols, drop_first=True)
 
@@ -96,3 +117,6 @@ df = df.drop(columns=["ca_1", "ca_2"])
 
 # print(f"columns: {df.shape[1]}, rows: {df.shape[0]}")
 # print(df.isna().sum().loc[lambda s: s > 0])
+
+# --- Export ---------------------------------------------------------------
+df.to_csv("cleaned_data.csv", index=False)
