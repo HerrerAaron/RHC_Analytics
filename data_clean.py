@@ -42,7 +42,7 @@ df = df.drop(columns=["adld3p", "urin1", "ptid", "dschdte", "lstctdte"])
 #
 # Censoring convention (per the asserts): a patient not known to have died
 # within 30 days, whether discharged, lost to follow-up, or died after day
-# 30, is censored at exactly day 30, not their true last-contact date.
+# 30, is right censored at exactly day 30, not their true last-contact date.
 df["sadmdte"] = pd.to_numeric(df["sadmdte"])
 df["dthdte"] = pd.to_numeric(df["dthdte"])
 
@@ -94,5 +94,5 @@ df = pd.get_dummies(df, columns=more_dummy_cols, drop_first=True)
 # ca_1/ca_2: pre-built carcinoma dummies, redundant now.
 df = df.drop(columns=["ca_1", "ca_2"])
 
-print(f"columns: {df.shape[1]}, rows: {df.shape[0]}")
-print(df.isna().sum().loc[lambda s: s > 0])
+# print(f"columns: {df.shape[1]}, rows: {df.shape[0]}")
+# print(df.isna().sum().loc[lambda s: s > 0])
