@@ -4,3 +4,5 @@ notes.txt
 rhc_cleaned.csv
 eda_summary_stats.csv
 covariate_balance_naive.csv
+covariate_balance_weighted.csv
+propensity_model_coefficients.csv
