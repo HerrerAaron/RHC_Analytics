@@ -28,3 +28,11 @@ Additional Phase 1 decisions:
 - **sadmdte, dthdte** retained as raw dates because they feed the derivation above, but excluded from any propensity-score or risk-model feature matrix, since `dthdte` is post-admission and would leak the outcome.
 - **surv2md1** kept as a feature despite looking derived. It's the SUPPORT model's day-1 estimated probability of surviving 2 months, available before the RHC decision is made, and a known confounder in the original Connors et al. 1996 study.
 - Dummy variables for `category`, `income`, `race`, `insurance_class`, `sex`, `cat2`, `carcinoma`, `rhc`, and `no_resus` were built from the raw columns rather than the dataset's pre-built dummy columns, which were dropped as redundant.
+
+## Phase 2 — EDA & Naive Comparison
+
+**EDA.** Distributions for the key admission variables (age, severity, disease category, treatment group) are in `figures/eda_key_variables.png`, with summary statistics in `eda_summary_stats.csv`. `ARenalF` (acute renal failure) is the single largest disease category at 43% of patients; the age distribution skews older, centered in the late 60s.
+
+**Naive comparison.** Patients who received RHC had a 30-day mortality rate of 38.0%, versus 30.6% for those who didn't (`figures/naive_mortality_comparison.png`). Taken at face value, this reads as RHC increasing mortality risk, the same disputed finding that motivated the original Connors et al. 1996 study and this project's first question.
+
+**Covariate balance.** That naive comparison isn't trustworthy on its own. Standardized mean differences (SMD) across 63 baseline covariates (`covariate_balance_naive.csv`, `figures/covariate_balance_love_plot.png`) show 34 of 63 (54%) exceed the conventional |SMD| > 0.1 imbalance threshold. Patients who received RHC were meaningfully sicker at admission: higher APACHE severity score, lower blood pressure, lower oxygenation, and more sepsis-category diagnoses than patients who didn't. The two groups are not naturally comparable, so the 38.0% vs. 30.6% gap likely reflects who was more likely to be catheterized, not the causal effect of the procedure itself. Resolving that confound is exactly what Phase 3's propensity-score adjustment addresses.

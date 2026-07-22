@@ -2,3 +2,5 @@ RHC_Project_Roadmap.pdf
 rhc.csv
 notes.txt
 rhc_cleaned.csv
+eda_summary_stats.csv
+covariate_balance_naive.csv
