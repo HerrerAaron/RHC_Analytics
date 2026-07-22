@@ -43,10 +43,12 @@ axes[0, 1].set_xlabel("aps")
 
 category_counts.plot(kind="bar", ax=axes[1, 0])
 axes[1, 0].set_title("Admission disease category")
+axes[1, 0].set_ylabel("Number of patients")
 axes[1, 0].tick_params(axis="x", rotation=75)
 
 treatment_counts.plot(kind="bar", ax=axes[1, 1], color=["steelblue", "firebrick"])
 axes[1, 1].set_title("Treatment group (RHC vs no RHC)")
+axes[1, 1].set_ylabel("Number of patients")
 axes[1, 1].tick_params(axis="x", rotation=0)
 
 fig.tight_layout()
