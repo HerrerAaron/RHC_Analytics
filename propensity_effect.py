@@ -121,10 +121,14 @@ plt.close(fig)
 
 # --- IPW-adjusted treatment effect -------------------------------------------
 
+# IPW already balances the covariates, so the outcome regression only needs
+# the treatment indicator; its coefficient is the IPW estimator of the ATE.
+# HC1 (robust) SEs are required here: the weights themselves induce
+# heteroskedasticity that OLS-style standard errors would understate.
 X_outcome = sm.add_constant(df["rhc_Yes"])
 outcome_model = sm.WLS(df["death_d30"], X_outcome, weights=df["ipw"]).fit(cov_type="HC1")
 
-ate = outcome_model.params["rhc_Yes"]
+ate = outcome_model.params["rhc_Yes"]  # ATE: average treatment effect
 ci_low, ci_high = outcome_model.conf_int().loc["rhc_Yes"]
 
 naive_ate = df.loc[df["rhc_Yes"] == 1, "death_d30"].mean() - df.loc[df["rhc_Yes"] == 0, "death_d30"].mean()
