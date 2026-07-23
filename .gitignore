@@ -6,3 +6,6 @@ eda_summary_stats.csv
 covariate_balance_naive.csv
 covariate_balance_weighted.csv
 propensity_model_coefficients.csv
+cv_model_comparison.csv
+test_set_metrics.csv
+feature_importance.csv
