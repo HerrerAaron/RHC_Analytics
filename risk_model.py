@@ -1,6 +1,8 @@
-"""Phase 4: predictive 30-day mortality risk model, compared across three
-scikit-learn classifiers, evaluated on a held-out test set, and interpreted
-via permutation feature importance."""
+"""Phase 4: predictive 30-day mortality risk model. Three scikit-learn
+classifiers are hyperparameter-tuned and compared entirely within
+cross-validation on the training set; only the single best-performing model
+touches the held-out test set, exactly once, for final evaluation and
+feature importance."""
 
 import os
 
@@ -11,14 +13,8 @@ import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-    roc_curve,
-)
-from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score, roc_curve
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -56,101 +52,116 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42
 )
 
-# Logistic regression needs standardized inputs to converge reliably and for
-# coefficient magnitudes to be comparable; tree ensembles are scale-invariant
-# and split on raw values directly, so only LR is wrapped in a scaler.
-models = {
-    "Logistic Regression": Pipeline([
-        ("scaler", StandardScaler()),
-        ("clf", LogisticRegression(max_iter=1000, random_state=42)),
-    ]),
-    "Random Forest": RandomForestClassifier(n_estimators=300, random_state=42, n_jobs=-1),
-    "Gradient Boosting": GradientBoostingClassifier(random_state=42),
+# max_iter is a solver convergence setting, not a tunable hyperparameter, so
+# it's fixed rather than searched. C, n_estimators, max_depth, etc. do trade
+# off bias vs. variance and are searched via GridSearchCV below. Grids are
+# kept small deliberately: this is a hyperparameter search, not an exhaustive
+# sweep.
+model_specs = {
+    "Logistic Regression": (
+        Pipeline([
+            ("scaler", StandardScaler()),
+            ("clf", LogisticRegression(max_iter=1000, random_state=42)),
+        ]),
+        {"clf__C": [0.01, 0.1, 1, 10, 100]},
+    ),
+    "Random Forest": (
+        RandomForestClassifier(random_state=42, n_jobs=-1),
+        {
+            "n_estimators": [200, 400],
+            "max_depth": [None, 10, 20],
+            "min_samples_leaf": [1, 5, 10],
+        },
+    ),
+    "Gradient Boosting": (
+        GradientBoostingClassifier(random_state=42),
+        {
+            "n_estimators": [100, 200],
+            "learning_rate": [0.05, 0.1],
+            "max_depth": [2, 3],
+        },
+    ),
 }
 
-# --- Cross-validated model comparison ----------------------------------------
+# --- Cross-validated hyperparameter search and model selection --------------
 
+# Model comparison and hyperparameter tuning happen in the same step and use
+# only X_train/y_train: for each model type, GridSearchCV searches its grid
+# under 5-fold CV and keeps the best-scoring combination. The test set is not
+# involved anywhere in this block.
 cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+searches = {}
 cv_rows = []
-for name, model in models.items():
-    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring="roc_auc")
+for name, (estimator, param_grid) in model_specs.items():
+    search = GridSearchCV(estimator, param_grid, cv=cv, scoring="roc_auc", n_jobs=-1)
+    search.fit(X_train, y_train)
+    searches[name] = search
     cv_rows.append({
         "model": name,
-        "cv_roc_auc_mean": scores.mean(),
-        "cv_roc_auc_std": scores.std(),
+        "best_cv_roc_auc": search.best_score_,
+        "best_params": search.best_params_,
     })
+
 cv_results = pd.DataFrame(cv_rows)
 cv_results.to_csv("cv_model_comparison.csv", index=False)
 print(cv_results.to_string(index=False))
 
-# --- Held-out test set evaluation --------------------------------------------
+# Single winner, selected purely on CV performance, before the test set is
+# touched at all.
+best_model_name = cv_results.loc[cv_results["best_cv_roc_auc"].idxmax(), "model"]
+best_model = searches[best_model_name].best_estimator_
+print(f"\nSelected model: {best_model_name}")
 
-fitted_models = {}
-test_rows = []
-for name, model in models.items():
-    model.fit(X_train, y_train)
-    fitted_models[name] = model
+# --- Held-out test set evaluation (single model, single evaluation) ---------
 
-    y_pred = model.predict(X_test)
-    y_proba = model.predict_proba(X_test)[:, 1]
-    test_rows.append({
-        "model": name,
-        "accuracy": accuracy_score(y_test, y_pred),
-        "precision": precision_score(y_test, y_pred),
-        "recall": recall_score(y_test, y_pred),
-        "roc_auc": roc_auc_score(y_test, y_proba),
-    })
-test_results = pd.DataFrame(test_rows)
-test_results.to_csv("test_set_metrics.csv", index=False)
-print(test_results.to_string(index=False))
+y_pred = best_model.predict(X_test)
+y_proba = best_model.predict_proba(X_test)[:, 1]
+
+test_metrics = pd.DataFrame([{
+    "model": best_model_name,
+    "accuracy": accuracy_score(y_test, y_pred),
+    "precision": precision_score(y_test, y_pred),
+    "recall": recall_score(y_test, y_pred),
+    "roc_auc": roc_auc_score(y_test, y_proba),
+}])
+test_metrics.to_csv("test_set_metrics.csv", index=False)
+print(test_metrics.to_string(index=False))
 
 fig, ax = plt.subplots(figsize=(6, 6))
-for name, model in fitted_models.items():
-    y_proba = model.predict_proba(X_test)[:, 1]
-    fpr, tpr, _ = roc_curve(y_test, y_proba)
-    auc = roc_auc_score(y_test, y_proba)
-    ax.plot(fpr, tpr, label=f"{name} (AUC = {auc:.3f})")
+fpr, tpr, _ = roc_curve(y_test, y_proba)
+auc = roc_auc_score(y_test, y_proba)
+ax.plot(fpr, tpr, label=f"{best_model_name} (AUC = {auc:.3f})")
 ax.plot([0, 1], [0, 1], linestyle="--", color="grey", label="Chance")
 ax.set_xlabel("False positive rate")
 ax.set_ylabel("True positive rate")
-ax.set_title("ROC curves (held-out test set)")
+ax.set_title(f"ROC curve, {best_model_name} (held-out test set)")
 ax.legend(loc="lower right")
 fig.tight_layout()
 fig.savefig(f"{FIG_DIR}/roc_curves.png", dpi=150)
 plt.close(fig)
 
-# --- Feature importance -------------------------------------------------------
+# --- Feature importance (single model) ---------------------------------------
 
-# Permutation importance (not each model's built-in importance): impurity-
-# based importance is biased toward high-cardinality/continuous features, so
-# using one model-agnostic method keeps the three models comparable.
-importance_rows = []
-for name, model in fitted_models.items():
-    result = permutation_importance(
-        model, X_test, y_test, scoring="roc_auc", n_repeats=10, random_state=42, n_jobs=-1
-    )
-    for feature, mean_imp, std_imp in zip(covariates, result.importances_mean, result.importances_std):
-        importance_rows.append({
-            "model": name,
-            "feature": feature,
-            "importance_mean": mean_imp,
-            "importance_std": std_imp,
-        })
-importance_table = pd.DataFrame(importance_rows)
+# Permutation importance also consumes the test set, so it's computed once,
+# for the one selected model, not once per candidate model.
+result = permutation_importance(
+    best_model, X_test, y_test, scoring="roc_auc", n_repeats=10, random_state=42, n_jobs=-1
+)
+importance_table = pd.DataFrame({
+    "feature": covariates,
+    "importance_mean": result.importances_mean,
+    "importance_std": result.importances_std,
+}).sort_values("importance_mean", ascending=False)
 importance_table.to_csv("feature_importance.csv", index=False)
 
-fig, axes = plt.subplots(1, 3, figsize=(18, 8))
-for ax, name in zip(axes, fitted_models):
-    top = (
-        importance_table[importance_table["model"] == name]
-        .sort_values("importance_mean", ascending=False)
-        .head(15)
-    )
-    # Escape "$" so matplotlib doesn't parse income labels as mathtext.
-    labels = top["feature"].str.replace("$", r"\$", regex=False)
-    ax.barh(labels[::-1], top["importance_mean"][::-1])
-    ax.set_title(name)
-    ax.set_xlabel("Permutation importance (ROC-AUC drop)")
+fig, ax = plt.subplots(figsize=(8, 10))
+top = importance_table.head(20)
+# Escape "$" so matplotlib doesn't parse income labels as mathtext.
+labels = top["feature"].str.replace("$", r"\$", regex=False)
+ax.barh(labels[::-1], top["importance_mean"][::-1])
+ax.set_xlabel("Permutation importance (ROC-AUC drop)")
+ax.set_title(f"Feature importance, {best_model_name}")
 fig.tight_layout()
 fig.savefig(f"{FIG_DIR}/feature_importance.png", dpi=150)
 plt.close(fig)
