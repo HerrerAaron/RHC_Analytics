@@ -1,7 +1,7 @@
 """Phase 2: EDA, the naive RHC-vs-no-RHC mortality comparison, and
 pre-adjustment covariate balance diagnostics."""
 
-import os
+from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
@@ -9,20 +9,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-df = pd.read_csv("rhc_cleaned.csv")
+# Paths are anchored to this script's own location, not the working
+# directory, so it runs the same regardless of where it's invoked from.
+ROOT = Path(__file__).resolve().parent.parent
+CSV_DIR = ROOT / "csv"
+FIG_DIR = ROOT / "figures"
+FIG_DIR.mkdir(exist_ok=True)
+
+df = pd.read_csv(CSV_DIR / "rhc_cleaned.csv")
 
 # One-hot columns round-trip through CSV as True/False, not 0/1.
 bool_cols = df.select_dtypes(include="bool").columns
 df[bool_cols] = df[bool_cols].astype(int)
 
-FIG_DIR = "figures"
-os.makedirs(FIG_DIR, exist_ok=True)
-
 # --- EDA: key variable summaries ------------------------------------------
 
 key_numeric = ["age", "aps", "scoma1", "surv2md1", "das2d3pc"]
 summary_stats = df[key_numeric].describe().T
-summary_stats.to_csv("eda_summary_stats.csv")
+summary_stats.to_csv(CSV_DIR / "eda_summary_stats.csv")
 
 treatment_counts = df["rhc_Yes"].value_counts().rename({0: "No RHC", 1: "RHC"})
 
@@ -52,7 +56,7 @@ axes[1, 1].set_ylabel("Number of patients")
 axes[1, 1].tick_params(axis="x", rotation=0)
 
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/eda_key_variables.png", dpi=150)
+fig.savefig(FIG_DIR / "eda_key_variables.png", dpi=150)
 plt.close(fig)
 
 # --- Naive comparison -------------------------------------------------------
@@ -71,7 +75,7 @@ ax.bar(["No RHC", "RHC"], [mortality_no_rhc, mortality_rhc], color=["steelblue",
 ax.set_ylabel("30-day mortality rate")
 ax.set_title("Naive (unadjusted) mortality comparison")
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/naive_mortality_comparison.png", dpi=150)
+fig.savefig(FIG_DIR / "naive_mortality_comparison.png", dpi=150)
 plt.close(fig)
 
 # --- Covariate balance -------------------------------------------------------
@@ -116,7 +120,7 @@ for col in covariates:
 balance_table = pd.DataFrame(balance_rows)
 balance_table["imbalanced"] = balance_table["smd"].abs() > 0.1
 balance_table = balance_table.sort_values("smd", key=abs, ascending=False)
-balance_table.to_csv("covariate_balance_naive.csv", index=False)
+balance_table.to_csv(CSV_DIR / "covariate_balance_naive.csv", index=False)
 
 n_imbalanced = balance_table["imbalanced"].sum()
 print(f"{n_imbalanced} of {len(balance_table)} covariates exceed |SMD| > 0.1 before adjustment")
@@ -134,5 +138,5 @@ ax.axvline(-0.1, color="grey", linestyle="--", linewidth=0.8)
 ax.set_xlabel("Standardized mean difference (RHC minus no RHC)")
 ax.set_title("Covariate balance before adjustment")
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/covariate_balance_love_plot.png", dpi=150)
+fig.savefig(FIG_DIR / "covariate_balance_love_plot.png", dpi=150)
 plt.close(fig)

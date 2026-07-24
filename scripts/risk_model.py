@@ -4,7 +4,7 @@ cross-validation on the training set; only the single best-performing model
 touches the held-out test set, exactly once, for final evaluation and
 feature importance."""
 
-import os
+from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
@@ -18,13 +18,17 @@ from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_sp
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-df = pd.read_csv("rhc_cleaned.csv")
+# Paths are anchored to this script's own location, not the working
+# directory, so it runs the same regardless of where it's invoked from.
+ROOT = Path(__file__).resolve().parent.parent
+CSV_DIR = ROOT / "csv"
+FIG_DIR = ROOT / "figures"
+FIG_DIR.mkdir(exist_ok=True)
+
+df = pd.read_csv(CSV_DIR / "rhc_cleaned.csv")
 
 bool_cols = df.select_dtypes(include="bool").columns
 df[bool_cols] = df[bool_cols].astype(int)
-
-FIG_DIR = "figures"
-os.makedirs(FIG_DIR, exist_ok=True)
 
 # Same covariate set validated for balance/propensity in Phases 2-3, minus
 # rhc_Yes: this is a pure admission-characteristics risk score, not a
@@ -104,7 +108,7 @@ for name, (estimator, param_grid) in model_specs.items():
     })
 
 cv_results = pd.DataFrame(cv_rows)
-cv_results.to_csv("cv_model_comparison.csv", index=False)
+cv_results.to_csv(CSV_DIR / "cv_model_comparison.csv", index=False)
 print(cv_results.to_string(index=False))
 
 # Single winner, selected purely on CV performance, before the test set is
@@ -125,7 +129,7 @@ test_metrics = pd.DataFrame([{
     "recall": recall_score(y_test, y_pred),
     "roc_auc": roc_auc_score(y_test, y_proba),
 }])
-test_metrics.to_csv("test_set_metrics.csv", index=False)
+test_metrics.to_csv(CSV_DIR / "test_set_metrics.csv", index=False)
 print(test_metrics.to_string(index=False))
 
 fig, ax = plt.subplots(figsize=(6, 6))
@@ -138,7 +142,7 @@ ax.set_ylabel("True positive rate")
 ax.set_title(f"ROC curve, {best_model_name} (held-out test set)")
 ax.legend(loc="lower right")
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/roc_curves.png", dpi=150)
+fig.savefig(FIG_DIR / "roc_curves.png", dpi=150)
 plt.close(fig)
 
 # --- Feature importance (single model) ---------------------------------------
@@ -153,7 +157,7 @@ importance_table = pd.DataFrame({
     "importance_mean": result.importances_mean,
     "importance_std": result.importances_std,
 }).sort_values("importance_mean", ascending=False)
-importance_table.to_csv("feature_importance.csv", index=False)
+importance_table.to_csv(CSV_DIR / "feature_importance.csv", index=False)
 
 fig, ax = plt.subplots(figsize=(8, 10))
 top = importance_table.head(20)
@@ -163,5 +167,5 @@ ax.barh(labels[::-1], top["importance_mean"][::-1])
 ax.set_xlabel("Permutation importance (ROC-AUC drop)")
 ax.set_title(f"Feature importance, {best_model_name}")
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/feature_importance.png", dpi=150)
+fig.savefig(FIG_DIR / "feature_importance.png", dpi=150)
 plt.close(fig)

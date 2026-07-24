@@ -1,7 +1,7 @@
 """Phase 3: propensity score model, IPW-adjusted 30-day mortality effect,
 and post-weighting covariate balance check."""
 
-import os
+from pathlib import Path
 
 import matplotlib
 matplotlib.use("Agg")
@@ -10,13 +10,17 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-df = pd.read_csv("rhc_cleaned.csv")
+# Paths are anchored to this script's own location, not the working
+# directory, so it runs the same regardless of where it's invoked from.
+ROOT = Path(__file__).resolve().parent.parent
+CSV_DIR = ROOT / "csv"
+FIG_DIR = ROOT / "figures"
+FIG_DIR.mkdir(exist_ok=True)
+
+df = pd.read_csv(CSV_DIR / "rhc_cleaned.csv")
 
 bool_cols = df.select_dtypes(include="bool").columns
 df[bool_cols] = df[bool_cols].astype(int)
-
-FIG_DIR = "figures"
-os.makedirs(FIG_DIR, exist_ok=True)
 
 # Same covariate set used for the Phase 2 balance check: demographics,
 # prognostic severity scores, comorbidity history, day-1 organ-system
@@ -45,7 +49,7 @@ y = df["rhc_Yes"]
 ps_model = sm.Logit(y, X).fit(disp=False)
 df["propensity_score"] = ps_model.predict(X)
 
-ps_model.summary2().tables[1].to_csv("propensity_model_coefficients.csv")
+ps_model.summary2().tables[1].to_csv(CSV_DIR / "propensity_model_coefficients.csv")
 
 fig, ax = plt.subplots(figsize=(7, 5))
 ax.hist(df.loc[df["rhc_Yes"] == 1, "propensity_score"], bins=30, alpha=0.6, label="RHC")
@@ -55,7 +59,7 @@ ax.set_ylabel("Number of patients")
 ax.set_title("Propensity score overlap by treatment group")
 ax.legend()
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/propensity_score_overlap.png", dpi=150)
+fig.savefig(FIG_DIR / "propensity_score_overlap.png", dpi=150)
 plt.close(fig)
 
 # --- Inverse probability weights ---------------------------------------------
@@ -93,12 +97,12 @@ weighted_rows = [
 ]
 weighted_balance = pd.DataFrame(weighted_rows)
 
-naive_balance = pd.read_csv("covariate_balance_naive.csv").rename(columns={"smd": "smd_unweighted"})
+naive_balance = pd.read_csv(CSV_DIR / "covariate_balance_naive.csv").rename(columns={"smd": "smd_unweighted"})
 balance_table = naive_balance[["covariate", "smd_unweighted"]].merge(weighted_balance, on="covariate")
 balance_table["imbalanced_before"] = balance_table["smd_unweighted"].abs() > 0.1
 balance_table["imbalanced_after"] = balance_table["smd_weighted"].abs() > 0.1
 balance_table = balance_table.sort_values("smd_weighted", key=abs, ascending=False)
-balance_table.to_csv("covariate_balance_weighted.csv", index=False)
+balance_table.to_csv(CSV_DIR / "covariate_balance_weighted.csv", index=False)
 
 n_before = balance_table["imbalanced_before"].sum()
 n_after = balance_table["imbalanced_after"].sum()
@@ -116,7 +120,7 @@ ax.set_xlabel("Standardized mean difference (RHC minus no RHC)")
 ax.set_title("Covariate balance before vs. after IPW")
 ax.legend(loc="lower right")
 fig.tight_layout()
-fig.savefig(f"{FIG_DIR}/covariate_balance_before_after.png", dpi=150)
+fig.savefig(FIG_DIR / "covariate_balance_before_after.png", dpi=150)
 plt.close(fig)
 
 # --- IPW-adjusted treatment effect -------------------------------------------

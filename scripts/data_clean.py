@@ -1,11 +1,18 @@
 """Phase 1 data prep: load rhc.csv, resolve missingness, derive outcome
 columns, and one-hot encode categoricals."""
 
+from pathlib import Path
+
 import pandas as pd
+
+# Paths are anchored to this script's own location, not the working
+# directory, so it runs the same whether invoked as `python data_clean.py`
+# from scripts/ or `python scripts/data_clean.py` from the repo root.
+CSV_DIR = Path(__file__).resolve().parent.parent / "csv"
 
 # Headers and string values are whitespace-padded in the source CSV
 # (e.g. "NA      "), so na_values=["NA"] misses them on a naive read.
-df = pd.read_csv("rhc.csv", skipinitialspace=True)
+df = pd.read_csv(CSV_DIR / "rhc.csv", skipinitialspace=True)
 df.columns = [c.strip() for c in df.columns]
 
 str_cols = df.select_dtypes(include=["object", "str"]).columns
@@ -119,4 +126,4 @@ df = df.drop(columns=["ca_1", "ca_2"])
 # print(df.isna().sum().loc[lambda s: s > 0])
 
 # --- Export ---------------------------------------------------------------
-df.to_csv("rhc_cleaned.csv", index=False)
+df.to_csv(CSV_DIR / "rhc_cleaned.csv", index=False)
