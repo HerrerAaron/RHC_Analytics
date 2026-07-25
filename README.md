@@ -7,7 +7,7 @@ A right heart catheter (RHC) is an invasive procedure doctors use to closely mon
 - **Does the procedure actually change a patient's chance of dying within 30 days?** Or does it just look that way because doctors tend to give it to patients who are already sicker?
 - **What patient characteristics best predict who is at high risk of dying?**
 - **Does the procedure help, hurt, or make no difference for specific types of patients**, for example, people with different underlying illnesses, or different levels of severity?
-- **Does the procedure change how quickly someone dies**, not just whether they do? *(not yet answered, see Status below)*
+- **Does the procedure change how quickly someone dies**, not just whether they do?
 
 ## The data
 
@@ -37,6 +37,16 @@ We also checked whether the procedure's effect changes depending on a patient's 
 
 We did not find strong evidence that the effect meaningfully differs across these patient groups. One severe-infection-related diagnosis looked somewhat worse on its own, but a more rigorous check comparing all groups directly did not confirm that was a real, reliable difference rather than chance. A couple of the smaller diagnosis groups didn't have enough patients to draw any conclusion from and were excluded rather than reported with a falsely precise number.
 
+## Does the procedure change how quickly patients die?
+
+Earlier sections ask *whether* a patient dies within 30 days. This section asks a related but different question: *when*. Two patients can both survive, or both die, within the 30-day window and still have very different paths, dying on day 2 is not the same as dying on day 28.
+
+Tracking survival day by day, patients who received the procedure died sooner, on average, than patients who didn't; the gap between the two groups shows up within the first week and keeps widening through day 30. A formal statistical test confirms this difference is very unlikely to be due to chance.
+
+That comparison is still unadjusted, though, the same "sicker patients were more likely to get the procedure" problem from earlier applies here too. Accounting for how sick each patient was at admission, patients who received the procedure faced roughly 25% higher risk of dying at any given moment during the 30 days than similar patients who didn't (most likely somewhere between about 12% and 38% higher). That's a separate confirmation, using a completely different method than earlier, of the same conclusion: the procedure is linked to worse outcomes even after accounting for how sick patients already were.
+
+This approach also flags which factors are most strongly linked to a faster time to death, largely the same ones the earlier risk model found: a do-not-resuscitate order, a low pre-calculated survival-probability score, poor liver function, and being in a coma at admission. One technical caveat: for a handful of specific factors, their effect on risk changes noticeably over the 30 days rather than staying constant, but the procedure's own risk estimate held steady throughout the window, so that caveat doesn't weaken the finding above.
+
 ## Status
 
-This project is still in progress (the timing question above isn't answered yet). Charts and full results tables live in the `figures/` and `csv/` folders. A more detailed technical write-up, covering the full methodology and statistics, will be added once complete.
+All four questions above are now answered. Charts and full results tables live in the `figures/` and `csv/` folders. A more detailed technical write-up, covering the full methodology and statistics, will be added once complete.

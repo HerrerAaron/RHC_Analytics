@@ -11,3 +11,5 @@ csv/test_set_metrics.csv
 csv/feature_importance.csv
 csv/subgroup_effects.csv
 csv/subgroup_interaction_tests.csv
+csv/cox_model_results.csv
+csv/cox_ph_assumption_check.csv

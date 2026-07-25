@@ -15,7 +15,7 @@ CSV_DIR = Path(__file__).resolve().parent.parent / "csv"
 df = pd.read_csv(CSV_DIR / "rhc.csv", skipinitialspace=True)
 df.columns = [c.strip() for c in df.columns]
 
-str_cols = df.select_dtypes(include=["object", "str"]).columns
+str_cols = df.select_dtypes(include="object").columns
 for c in str_cols:
     df[c] = df[c].str.strip()
 df = df.replace("NA", pd.NA)
