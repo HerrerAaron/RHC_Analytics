@@ -13,3 +13,6 @@ csv/subgroup_effects.csv
 csv/subgroup_interaction_tests.csv
 csv/cox_model_results.csv
 csv/cox_ph_assumption_check.csv
+csv/dashboard_population.csv
+csv/dashboard_naive_vs_adjusted.csv
+csv/dashboard_km_curve.csv
