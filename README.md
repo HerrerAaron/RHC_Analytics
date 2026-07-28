@@ -146,7 +146,7 @@ RHC_Analytics/
 
 - Since this project used observational and not experimental data, unmeasured confounding may still exist. Adjustment accounts for every measured covariate, but some unmeasured factor could still influence both the RHC decision and the outcome.
 - Any patient not known to have died within 30 days is treated as censored at exactly day 30, not their true last-contact date. This is the dataset's real design and worth knowing before interpreting the survival results.
-- Some subgroups expressed covariate imbalance, even after adjustment. IPW weights are computed once and reused across subgroups for stability; three disease-category subgroups (CHF, Cirrhosis, COPD) show real residual covariate imbalance within them, so those three estimates should be trusted less than the overall and severity-tier results.
+- Some subgroups express covariate imbalance, even after adjustment. IPW weights are computed once and reused across subgroups for stability; three disease-category subgroups (CHF, Cirrhosis, COPD) show real residual covariate imbalance within them, so those three estimates should be trusted less than the overall and severity-tier results.
 - Two covariates violate the Cox model's proportional-hazards assumption, which can influence the model's accuracy. RHC's own hazard ratio does not, so the headline finding is unaffected.
 - Two disease categories were excluded (Colon cancer, Lung cancer) for having too few treated patients to produce a reliable estimate.
 
@@ -168,7 +168,7 @@ python scripts/survival_analysis.py
 python scripts/dashboard_export.py
 ```
 
-Or, to just explore the dashboard: open `powerbi/rhc_dashboard.pbix` in Power BI Desktop (free).
+Or, to just explore the dashboard: open `powerbi/rhc_dashboard.pbix` in Power BI Desktop.
 
 ## Future Improvements
 
