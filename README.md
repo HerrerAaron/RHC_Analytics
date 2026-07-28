@@ -2,7 +2,7 @@
 
 ## Summary
 
-Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzed 5,735 ICU patients using causal inference, predictive modeling, and survival analysis to test whether RHC actually improved 30-day survival, or whether it just looked that way because sicker patients were more likely to receive it. Three independent statistical methods reached the same conclusion: RHC was associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
+Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzed 5,735 ICU patients using causal inference, predictive modelling, and survival analysis to test whether RHC actually improved 30-day survival, or whether it just looked that way because sicker patients were more likely to receive it. Three independent statistical methods reached the same conclusion: RHC was associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
 
 ## Dashboard Preview
 
@@ -23,11 +23,11 @@ This project answered four specific questions:
 
 1. RHC was linked to a ~5 percentage point increase in 30-day mortality, even after adjusting for illness severity. The raw comparison showed 38.0% mortality for RHC patients vs. 30.6% for non-RHC patients, but that was confounded, RHC patients were meaningfully sicker at admission. After statistically reweighting patients so the two groups became comparable on every measured characteristic, the adjusted gap shrank to +5.2 percentage points (95% confidence range: +1.9% to +8.5%) and remained significant.
 
-2. A completely independent method confirmed the same result. A survival-analysis model (Cox regression) estimating moment-to-moment mortality risk across the full 30 days found RHC patients faced about 25% higher risk of dying at any given time than similar patients who didn't receive it. Getting the same directional answer from two structurally different statistical methods was a strong signal this wasn't a modeling artifact.
+2. A second, completely different statistical approach reached the same conclusion. Looking not just at whether patients died but also *when* they died, patients who received RHC faced about 25% higher risk of death at any point during the 30-day window than similar patients who didn't. Reaching the same conclusion through two structurally different methods was a strong signal the finding wasn't a modelling artifact.
 
 3. A predictive model correctly classified 30-day mortality risk 74% of the time using only admission data. The strongest predictors were a pre-existing prognosis score, baseline functional health, DNR status, and liver function, largely consistent across both the predictive model and the survival model.
 
-4. No patient subgroup showed a confirmed, statistically different RHC effect. RHC's effect was re-estimated within 7 disease categories and 3 severity tiers; a formal statistical test comparing all subgroups directly found no confirmed difference between them, the apparent variation was consistent with chance rather than a proven pattern.
+4. RHC's effect was also examined across different types of patients, 7 disease categories and 3 severity levels, to see whether it worked better or worse for some groups than others. Although some groups appeared to respond differently at first glance, a direct statistical comparison found none of those differences were confirmed as real; the variation was consistent with chance rather than a proven pattern.
 
 ## Why This Matters
 
@@ -94,10 +94,22 @@ Outcome variables (`death`, `death_d30`, `survial_d30`) shipped pre-computed in 
 
 ### Analysis
 
-- **Causal inference**: logistic regression propensity model on 63 covariates, using stabilized inverse probability weights, and weighted-least-squares treatment effect with robust standard errors. Covariate balance checked before and after weighting (34 of 63 covariates imbalanced before, 0 of 63 after).
-- **Predictive modeling**: logistic regression, random forest, and gradient boosting, each hyperparameter-tuned via `GridSearchCV` under 5-fold cross-validation (CV); model selection based on CV score alone, the test set touched exactly once by the winning model. Feature importance via permutation importance (model-agnostic, unlike built-in impurity importance).
+- **Causal inference**: Used propensity-score weighting to make the treatment and comparison groups statistically comparable before estimating RHC's effect on mortality.
+- **Predictive modelling**: Compared three machine learning models, selected the best-performing one using cross-validation, then evaluated it once on unseen data.
+- **Subgroup analysis**: Re-estimated the treatment effect separately across diagnoses and severity levels, then formally tested whether those differences were statistically real rather than eyeballing them.
+- **Survival analysis**: Modeled not just whether patients died, but when, and formally tested a key modelling assumption rather than taking it for granted.
+
+<!-- markdownlint-disable MD033 -->
+<details>
+<summary>Technical details</summary>
+
+- **Causal inference**: logistic regression propensity model on 63 covariates, stabilized inverse probability weights, weighted-least-squares treatment effect with robust standard errors. Covariate balance checked before and after weighting (34 of 63 covariates imbalanced before, 0 of 63 after).
+- **Predictive modelling**: logistic regression, random forest, and gradient boosting, each hyperparameter-tuned via `GridSearchCV` under 5-fold cross-validation (CV); model selection based on CV score alone, the test set touched exactly once by the winning model. Feature importance via permutation importance (model-agnostic, unlike built-in impurity importance).
 - **Subgroup analysis**: treatment effect re-estimated within 7 disease categories and 3 severity tiers (2 categories excluded for insufficient sample size); formal interaction tests (joint F-tests) rather than eyeballing confidence-interval overlap.
-- **Survival analysis**: Kaplan-Meier curves with a log-rank test, plus a Cox proportional-hazards model (64 covariates) with a formal proportional-hazards assumption check, not just a fitted hazard ratio taken on faith.
+- **Survival analysis**: Kaplan-Meier curves with a log-rank test, plus a Cox proportional-hazards model (64 covariates) with a formal proportional-hazards assumption check.
+
+</details>
+<!-- markdownlint-enable MD033 -->
 
 ## Dashboard
 
@@ -135,16 +147,30 @@ RHC_Analytics/
 
 ## Skills Demonstrated
 
+- Causal inference
+- Predictive modelling
+- Survival analysis
+- Statistical validation & hypothesis testing
+- Feature engineering
+- Power BI dashboard development
+- Git version control
+
+<!-- markdownlint-disable MD033 -->
+<details>
+<summary>Technical details</summary>
+
 - Principled missing-data diagnosis (structural vs. random missingness)
 - Categorical encoding with deliberate, defensible reference categories
-- Propensity-score modeling and inverse probability weighting
+- Propensity-score modelling and inverse probability weighting
 - Covariate balance diagnostics (standardized mean differences)
 - Cross-validated hyperparameter tuning and leakage-free model selection
 - Permutation feature importance
 - Subgroup / heterogeneous treatment effect testing with multiple-comparison awareness
-- Kaplan-Meier estimation and Cox proportional-hazards modeling with assumption checking
+- Kaplan-Meier estimation and Cox proportional-hazards modelling with assumption checking
 - Power BI dashboard design for a non-technical, stakeholder audience
-- Git version control, including diagnosing and remediating an accidental commit
+
+</details>
+<!-- markdownlint-enable MD033 -->
 
 ## Limitations
 
