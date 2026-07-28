@@ -52,8 +52,8 @@ The Right Heart Catheterization dataset from the SUPPORT study (Connors et al., 
 
 ```mermaid
 flowchart LR
-    A["Raw data<br/>5,735 rows"] --> B["Clean & encode<br/>78 columns"]
-    B --> C["EDA & naive<br/>comparison"]
+    A["Raw data<br/>5,735 rows"] --> B["Clean and encode<br/>78 columns"]
+    B --> C["EDA and naive<br/>comparison"]
     C --> D["Causal inference<br/>(IPW)"]
     B --> E["Predictive risk<br/>model"]
     B --> F["Survival<br/>analysis"]
@@ -138,7 +138,7 @@ RHC_Analytics/
 ## Tools Used
 
 - **Language**: Python 3.14
-- **Data & stats**: pandas, numpy, statsmodels
+- **Data and stats**: pandas, numpy, statsmodels
 - **Machine learning**: scikit-learn
 - **Survival analysis**: lifelines
 - **Visualization**: matplotlib
@@ -148,9 +148,9 @@ RHC_Analytics/
 ## Skills Demonstrated
 
 - Causal inference
-- Predictive modelling
+- Predictive modelling and machine learning
 - Survival analysis
-- Statistical validation & hypothesis testing
+- Statistical validation and hypothesis testing
 - Feature engineering
 - Power BI dashboard development
 - Git version control
