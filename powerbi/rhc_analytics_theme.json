@@ -1,0 +1,39 @@
+{
+  "name": "RHC Analytics",
+  "dataColors": [
+    "#4682B4",
+    "#B22222",
+    "#70AD47",
+    "#FFC000",
+    "#7030A0",
+    "#264478",
+    "#9E480E",
+    "#636363"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#252423",
+  "tableAccent": "#B22222",
+  "good": "#4682B4",
+  "neutral": "#FFC000",
+  "bad": "#B22222",
+  "textClasses": {
+    "title": {
+      "fontSize": 14,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#252423"
+    },
+    "header": {
+      "fontSize": 12,
+      "fontFace": "Segoe UI Semibold"
+    },
+    "label": {
+      "fontSize": 10,
+      "fontFace": "Segoe UI"
+    },
+    "callout": {
+      "fontSize": 32,
+      "fontFace": "Segoe UI Semibold",
+      "color": "#B22222"
+    }
+  }
+}
