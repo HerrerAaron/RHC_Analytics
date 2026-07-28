@@ -1,8 +1,8 @@
-# RHC Analytics: Does Right Heart Catheterization Improve ICU Survival?
+# RHC Analytics: Did Right Heart Catheterization Improve ICU Survival?
 
 ## Summary
 
-Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzes 5,735 ICU patients using causal inference, predictive modeling, and survival analysis to test whether RHC actually improves 30-day survival, or whether it just looks that way because sicker patients were more likely to receive it. Three independent statistical methods agree: RHC is associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
+Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzed 5,735 ICU patients using causal inference, predictive modeling, and survival analysis to test whether RHC actually improved 30-day survival, or whether it just looked that way because sicker patients were more likely to receive it. Three independent statistical methods agreed: RHC was associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
 
 ## Dashboard Preview
 
@@ -12,22 +12,22 @@ Right heart catheterization (RHC) is a common but clinically disputed invasive I
 
 Clinicians have never reached consensus on whether RHC helps or harms patients, the study this dataset comes from (Connors et al., 1996, *JAMA*) was itself part of that decades-long controversy. Framed as an analyst problem, this is a selection-bias question that shows up constantly outside healthcare too: *does this intervention/campaign/program actually work, or are the people who received it just different to begin with?*
 
-This project answers four specific questions:
+This project answered four specific questions:
 
-1. **Causal**: Does RHC change a patient's 30-day mortality risk, once selection bias is accounted for?
-2. **Predictive**: Which admission characteristics best predict mortality risk?
-3. **Segmentation**: Does RHC's effect differ across patient subgroups (diagnosis, severity)?
-4. **Time-to-event**: Does RHC change *when* patients die, not just *whether* they do?
+1. **Causal**: Did RHC change a patient's 30-day mortality risk, once selection bias was accounted for?
+2. **Predictive**: Which admission characteristics best predicted mortality risk?
+3. **Segmentation**: Did RHC's effect differ across patient subgroups (diagnosis, severity)?
+4. **Time-to-event**: Did RHC change *when* patients died, not just *whether* they did?
 
 ## Key Insights
 
-1. RHC is linked to a ~5 percentage point increase in 30-day mortality, even after adjusting for illness severity. The raw comparison shows 38.0% mortality for RHC patients vs. 30.6% for non-RHC patients, but that's confounded, RHC patients were meaningfully sicker at admission. After statistically reweighting patients so the two groups become comparable on every measured characteristic, the adjusted gap shrinks to +5.2 percentage points (95% confidence range: +1.9% to +8.5%) and remains significant.
+1. RHC was linked to a ~5 percentage point increase in 30-day mortality, even after adjusting for illness severity. The raw comparison showed 38.0% mortality for RHC patients vs. 30.6% for non-RHC patients, but that was confounded, RHC patients were meaningfully sicker at admission. After statistically reweighting patients so the two groups became comparable on every measured characteristic, the adjusted gap shrank to +5.2 percentage points (95% confidence range: +1.9% to +8.5%) and remained significant.
 
-2. A completely independent method confirms the same result. A survival-analysis model (Cox regression) estimating moment-to-moment mortality risk across the full 30 days found RHC patients faced about 25% higher risk of dying at any given time than similar patients who didn't receive it. Getting the same directional answer from two structurally different statistical methods is a strong signal this isn't a modeling artifact.
+2. A completely independent method confirmed the same result. A survival-analysis model (Cox regression) estimating moment-to-moment mortality risk across the full 30 days found RHC patients faced about 25% higher risk of dying at any given time than similar patients who didn't receive it. Getting the same directional answer from two structurally different statistical methods was a strong signal this wasn't a modeling artifact.
 
-3. A predictive model correctly classifies 30-day mortality risk 74% of the time using only admission data. The strongest predictors were a pre-existing prognosis score, baseline functional health, DNR status, and liver function, largely consistent across both the predictive model and the survival model.
+3. A predictive model correctly classified 30-day mortality risk 74% of the time using only admission data. The strongest predictors were a pre-existing prognosis score, baseline functional health, DNR status, and liver function, largely consistent across both the predictive model and the survival model.
 
-4. No patient subgroup shows a confirmed, statistically different RHC effect. RHC's effect was re-estimated within 7 disease categories and 3 severity tiers; a formal statistical test comparing all subgroups directly found no confirmed difference between them, the apparent variation is consistent with chance rather than a proven pattern.
+4. No patient subgroup showed a confirmed, statistically different RHC effect. RHC's effect was re-estimated within 7 disease categories and 3 severity tiers; a formal statistical test comparing all subgroups directly found no confirmed difference between them, the apparent variation was consistent with chance rather than a proven pattern.
 
 ## Recommendations
 
@@ -42,7 +42,7 @@ This project answers four specific questions:
 The Right Heart Catheterization dataset from the SUPPORT study (Connors et al., 1996), a widely used public dataset in causal inference research and teaching.
 
 - **5,735 patient records**, 83 raw columns
-- One flat file (`csv/rhc.csv`), columns span demographics, comorbidity history, day-1 vitals/labs, admission diagnosis, treatment, and outcomes
+- One flat file (`csv/rhc.csv`), columns spanned demographics, comorbidity history, day-1 vitals/labs, admission diagnosis, treatment, and outcomes
 
 ## Methodology
 
@@ -62,15 +62,15 @@ flowchart LR
 
 **Workflow**:
 
-1. Import raw data, diagnose structure and missingness
-2. Clean and encode, resolving 5 columns with missing values individually, based on *why* each was missing
-3. Derive and validate outcome variables from raw dates 
-4. Compute the naive (unadjusted) comparison and quantify covariate imbalance
-5. Fit a propensity-score model and apply inverse probability weighting to estimate the adjusted causal effect
-6. Train and compare 3 classifiers via cross-validated hyperparameter tuning; evaluate the winner once on a held-out test set
-7. Re-estimate the treatment effect within patient subgroups; formally test whether it differs
+1. Imported raw data, diagnosed structure and missingness
+2. Cleaned and encoded, resolving 5 columns with missing values individually, based on *why* each was missing
+3. Derived and validated outcome variables from raw dates
+4. Computed the naive (unadjusted) comparison and quantified covariate imbalance
+5. Fit a propensity-score model and applied inverse probability weighting to estimate the adjusted causal effect
+6. Trained and compared 3 classifiers via cross-validated hyperparameter tuning; evaluated the winner once on a held-out test set
+7. Re-estimated the treatment effect within patient subgroups; formally tested whether it differed
 8. Fit Kaplan-Meier curves and a Cox proportional-hazards model for time-to-event analysis
-9. Export cleaned results into a 6-page Power BI dashboard
+9. Exported cleaned results into a 6-page Power BI dashboard
 
 ### Data Cleaning
 
@@ -86,7 +86,7 @@ Five columns had missing values; each was resolved based on *why* it was missing
 
 Categorical variables were one-hot encoded from the raw text columns.
 
-Outcome variables (`death`, `death_d30`, `survial_d30`) ship pre-computed in the dataset but were rebuilt from raw admission/death dates and validated to match exactly, one line of defense against silently trusting a black-box column:
+Outcome variables (`death`, `death_d30`, `survial_d30`) shipped pre-computed in the dataset but were rebuilt from raw admission/death dates and validated to match exactly, one line of defense against silently trusting a black-box column:
 
 ### Analysis
 
@@ -144,10 +144,10 @@ RHC_Analytics/
 
 ## Limitations
 
-- Since this project used observational and not experimental data, unmeasured confounding may still exist. Adjustment accounts for every measured covariate, but some unmeasured factor could still influence both the RHC decision and the outcome.
+- Since this project used observational and not experimental data, unmeasured confounding may still exist. Adjustment accounted for every measured covariate, but some unmeasured factor could still influence both the RHC decision and the outcome.
 - Any patient not known to have died within 30 days is treated as censored at exactly day 30, not their true last-contact date. This is the dataset's real design and worth knowing before interpreting the survival results.
-- Some subgroups express covariate imbalance, even after adjustment. IPW weights are computed once and reused across subgroups for stability; three disease-category subgroups (CHF, Cirrhosis, COPD) show real residual covariate imbalance within them, so those three estimates should be trusted less than the overall and severity-tier results.
-- Two covariates violate the Cox model's proportional-hazards assumption, which can influence the model's accuracy. RHC's own hazard ratio does not, so the headline finding is unaffected.
+- Some subgroups expressed covariate imbalance, even after adjustment. IPW weights were computed once and reused across subgroups for stability; three disease-category subgroups (CHF, Cirrhosis, COPD) showed real residual covariate imbalance within them, so those three estimates should be trusted less than the overall and severity-tier results.
+- Two covariates violated the Cox model's proportional-hazards assumption, which could influence the model's accuracy. RHC's own hazard ratio did not, so the headline finding was unaffected.
 - Two disease categories were excluded (Colon cancer, Lung cancer) for having too few treated patients to produce a reliable estimate.
 
 ## How to Run
