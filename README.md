@@ -1,52 +1,186 @@
-# RHC_Analytics
+# RHC Analytics: Does Right Heart Catheterization Improve ICU Survival?
 
-A right heart catheter (RHC) is an invasive procedure doctors use to closely monitor a critically ill patient's heart and circulation. It's common in ICUs, but doctors have long disagreed about whether it actually helps patients or does more harm than good. This project uses real data from 5,735 ICU patients to investigate that question, along with a few related ones, using statistical and machine learning techniques common in healthcare and business analytics.
+## Summary
 
-## What this project asks
+Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzes 5,735 ICU patients using causal inference, predictive modeling, and survival analysis to test whether RHC actually improves 30-day survival, or whether it just looks that way because sicker patients were more likely to receive it. Three independent statistical methods agree: RHC is associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
 
-- **Does the procedure actually change a patient's chance of dying within 30 days?** Or does it just look that way because doctors tend to give it to patients who are already sicker?
-- **What patient characteristics best predict who is at high risk of dying?**
-- **Does the procedure help, hurt, or make no difference for specific types of patients**, for example, people with different underlying illnesses, or different levels of severity?
-- **Does the procedure change how quickly someone dies**, not just whether they do?
+## Dashboard Preview
 
-## The data
+![Patient Population Overview](powerbi/screenshots/population_slicer.gif)
 
-The dataset covers 5,735 ICU patients: their health at admission, whether they received the procedure, and what happened over the next 30 days. Some fields were missing or incomplete; each was handled based on *why* it was likely missing rather than one blanket rule, for example, a missing "date of death" almost always just means the patient survived, not that data was lost.
+## Problem
 
-## Does the procedure actually increase the risk of dying?
+Clinicians have never reached consensus on whether RHC helps or harms patients, the study this dataset comes from (Connors et al., 1996, *JAMA*) was itself part of that decades-long controversy. Framed as an analyst problem, this is a selection-bias question that shows up constantly outside healthcare too: *does this intervention/campaign/program actually work, or are the people who received it just different to begin with?*
 
-At first glance, yes: patients who received the procedure died within 30 days about 38% of the time, versus 31% for patients who didn't.
+This project answers four specific questions:
 
-That comparison isn't fair on its own, though. Patients who received the procedure were also considerably sicker to begin with, worse vital signs, more severe illness scores, more organ dysfunction, so some or all of that 7-point gap could simply reflect how sick they already were, not any effect of the procedure itself.
+1. **Causal**: Does RHC change a patient's 30-day mortality risk, once selection bias is accounted for?
+2. **Predictive**: Which admission characteristics best predict mortality risk?
+3. **Segmentation**: Does RHC's effect differ across patient subgroups (diagnosis, severity)?
+4. **Time-to-event**: Does RHC change *when* patients die, not just *whether* they do?
 
-To account for this, we built a statistical model estimating how likely each patient was to receive the procedure, based on everything known about them at admission. We used that model to reweight the patients so the "received the procedure" group and the "didn't" group become as comparable as possible on every measured characteristic, recreating a fair comparison out of two originally mismatched groups.
+## Key Insights
 
-After that adjustment, the gap shrank but didn't disappear: patients who received the procedure were still roughly 5 percentage points more likely to die within 30 days than similar patients who didn't (most likely somewhere between about 2 and 9 points). Because that remaining gap can't be explained away by measurable differences in how sick patients were, it points toward the procedure carrying some real added risk.
+1. RHC is linked to a ~5 percentage point increase in 30-day mortality, even after adjusting for illness severity. The raw comparison shows 38.0% mortality for RHC patients vs. 30.6% for non-RHC patients, but that's confounded, RHC patients were meaningfully sicker at admission. After statistically reweighting patients so the two groups become comparable on every measured characteristic, the adjusted gap shrinks to +5.2 percentage points (95% confidence range: +1.9% to +8.5%) and remains significant.
 
-One honest caveat: this is real-world (observational) data, not a controlled experiment, so some unmeasured factor could still be influencing both who received the procedure and who survived. This result can't prove the procedure *causes* worse outcomes, only that the two are linked even after accounting for everything measured, which mirrors a long-standing, still-unresolved debate in the medical literature over whether this procedure is safe.
+2. A completely independent method confirms the same result. A survival-analysis model (Cox regression) estimating moment-to-moment mortality risk across the full 30 days found RHC patients faced about 25% higher risk of dying at any given time than similar patients who didn't receive it. Getting the same directional answer from two structurally different statistical methods is a strong signal this isn't a modeling artifact.
 
-## Who is most at risk of dying?
+3. A predictive model correctly classifies 30-day mortality risk 74% of the time using only admission data. The strongest predictors were a pre-existing prognosis score, baseline functional health, DNR status, and liver function, largely consistent across both the predictive model and the survival model.
 
-Separately, we built a model that predicts a patient's risk of dying within 30 days using only information available at admission (not whether they received the procedure). We tested a few different modeling approaches and kept whichever performed best on patients it hadn't seen before.
+4. No patient subgroup shows a confirmed, statistically different RHC effect. RHC's effect was re-estimated within 7 disease categories and 3 severity tiers; a formal statistical test comparing all subgroups directly found no confirmed difference between them, the apparent variation is consistent with chance rather than a proven pattern.
 
-The best model correctly predicted survival or death for about 74% of new patients, meaningfully better than a coin flip, though far from perfect. The strongest predictors of risk were a pre-calculated survival-probability score already on file for each patient, a patient's baseline functional health, whether a do-not-resuscitate order was in place, and liver function.
+## Recommendations
 
-## Does the effect differ for different types of patients?
+- Treat RHC as carrying real, non-trivial procedural risk, not a neutral diagnostic step, when weighing its use in similarly-composed ICU populations. The effect held up across two independent causal methods and didn't meaningfully vary by diagnosis or severity.
+- Incorporate the top predictive risk factors (existing prognosis score, functional status, DNR status, liver function) into admission-time risk-scoring workflows, they were the strongest, most consistent predictors across two separate models.
+- Treat this as hypothesis-generating for a prospective study, not final proof. Observational analysis cannot fully rule out unmeasured confounding (see Limitations); a randomized or quasi-experimental design would be the appropriate next step to confirm causality.
 
-We also checked whether the procedure's effect changes depending on a patient's underlying diagnosis (for example, heart failure vs. liver disease vs. a severe body-wide infection) or how severely ill they were on arrival.
+---
 
-We did not find strong evidence that the effect meaningfully differs across these patient groups. One severe-infection-related diagnosis looked somewhat worse on its own, but a more rigorous check comparing all groups directly did not confirm that was a real, reliable difference rather than chance. A couple of the smaller diagnosis groups didn't have enough patients to draw any conclusion from and were excluded rather than reported with a falsely precise number.
+## Dataset
 
-## Does the procedure change how quickly patients die?
+The Right Heart Catheterization dataset from the SUPPORT study (Connors et al., 1996), a widely used public dataset in causal inference research and teaching.
 
-Earlier sections ask *whether* a patient dies within 30 days. This section asks a related but different question: *when*. Two patients can both survive, or both die, within the 30-day window and still have very different paths, dying on day 2 is not the same as dying on day 28.
+- **5,735 patient records**, 83 raw columns
+- One flat file (`csv/rhc.csv`), columns span demographics, comorbidity history, day-1 vitals/labs, admission diagnosis, treatment, and outcomes
 
-Tracking survival day by day, patients who received the procedure died sooner, on average, than patients who didn't; the gap between the two groups shows up within the first week and keeps widening through day 30. A formal statistical test confirms this difference is very unlikely to be due to chance.
+## Methodology
 
-That comparison is still unadjusted, though, the same "sicker patients were more likely to get the procedure" problem from earlier applies here too. Accounting for how sick each patient was at admission, patients who received the procedure faced roughly 25% higher risk of dying at any given moment during the 30 days than similar patients who didn't (most likely somewhere between about 12% and 38% higher). That's a separate confirmation, using a completely different method than earlier, of the same conclusion: the procedure is linked to worse outcomes even after accounting for how sick patients already were.
+```mermaid
+flowchart LR
+    A["Raw data<br/>5,735 rows"] --> B["Clean & encode<br/>78 columns"]
+    B --> C["EDA & naive<br/>comparison"]
+    C --> D["Causal inference<br/>(IPW)"]
+    B --> E["Predictive risk<br/>model"]
+    B --> F["Survival<br/>analysis"]
+    D --> G["Subgroup<br/>analysis"]
+    D --> H["Power BI<br/>dashboard"]
+    E --> H
+    F --> H
+    G --> H
+```
 
-This approach also flags which factors are most strongly linked to a faster time to death, largely the same ones the earlier risk model found: a do-not-resuscitate order, a low pre-calculated survival-probability score, poor liver function, and being in a coma at admission. One technical caveat: for a handful of specific factors, their effect on risk changes noticeably over the 30 days rather than staying constant, but the procedure's own risk estimate held steady throughout the window, so that caveat doesn't weaken the finding above.
+**Workflow**:
 
-## Status
+1. Import raw data, diagnose structure and missingness
+2. Clean and encode, resolving 5 columns with missing values individually, based on *why* each was missing
+3. Derive and validate outcome variables from raw dates 
+4. Compute the naive (unadjusted) comparison and quantify covariate imbalance
+5. Fit a propensity-score model and apply inverse probability weighting to estimate the adjusted causal effect
+6. Train and compare 3 classifiers via cross-validated hyperparameter tuning; evaluate the winner once on a held-out test set
+7. Re-estimate the treatment effect within patient subgroups; formally test whether it differs
+8. Fit Kaplan-Meier curves and a Cox proportional-hazards model for time-to-event analysis
+9. Export cleaned results into a 6-page Power BI dashboard
 
-All four questions above are now answered. Charts and full results tables live in the `figures/` and `csv/` folders. A more detailed technical write-up, covering the full methodology and statistics, will be added once complete.
+### Data Cleaning
+
+Five columns had missing values; each was resolved based on *why* it was missing, not a blanket rule:
+
+| Column | % missing | Decision | Reasoning |
+| --- | --- | --- | --- |
+| `dthdte` | 35.1% | Left null | Structural, missing exactly for survivors |
+| `cat2` | 79.1% | Filled `"None"` | Missing means "no secondary diagnosis," not a gap |
+| `adld3p` | 74.9% | Dropped | No structural cause, too sparse to impute |
+| `urin1` | 52.8% | Dropped | Structural, missing exactly for survivors |
+| `dschdte` | 0.02% | Column dropped entirely | Unused anywhere downstream |
+
+Categorical variables were one-hot encoded from the raw text columns.
+
+Outcome variables (`death`, `death_d30`, `survial_d30`) ship pre-computed in the dataset but were rebuilt from raw admission/death dates and validated to match exactly, one line of defense against silently trusting a black-box column:
+
+### Analysis
+
+- **Causal inference**: logistic regression propensity model on 63 covariates, using stabilized inverse probability weights, and weighted-least-squares treatment effect with robust standard errors. Covariate balance checked before and after weighting (34 of 63 covariates imbalanced before, 0 of 63 after).
+- **Predictive modeling**: logistic regression, random forest, and gradient boosting, each hyperparameter-tuned via `GridSearchCV` under 5-fold cross-validation (CV); model selection based on CV score alone, the test set touched exactly once by the winning model. Feature importance via permutation importance (model-agnostic, unlike built-in impurity importance).
+- **Subgroup analysis**: treatment effect re-estimated within 7 disease categories and 3 severity tiers (2 categories excluded for insufficient sample size); formal interaction tests (joint F-tests) rather than eyeballing confidence-interval overlap.
+- **Survival analysis**: Kaplan-Meier curves with a log-rank test, plus a Cox proportional-hazards model (64 covariates) with a formal proportional-hazards assumption check, not just a fitted hazard ratio taken on faith.
+
+## Dashboard
+
+A 6-page Power BI dashboard (cover page + 5 analysis pages, one per required panel): population overview, naive-vs-adjusted effect, subgroup comparison, feature importance, and survival curves.
+
+![Title Page](powerbi/screenshots/titlepage.png)
+![Patient Population Overview](powerbi/screenshots/popoverview.png)
+![Naive vs Adjusted](powerbi/screenshots/naivevsadjusted.png)
+![Subgroup Comparison](powerbi/screenshots/subgroups.png)
+![Feature Importance](powerbi/screenshots/featureimportance.png)
+![Survival Analysis](powerbi/screenshots/survivalcurves.png)
+
+## Repository Structure
+
+```text
+RHC_Analytics/
+├── scripts/           # Phase 1-7 pipeline, one script per analysis stage
+├── csv/               # Generated data (gitignored, fully regenerable)
+├── figures/           # Generated matplotlib figures 
+├── powerbi/           # Power BI theme file and dashboard
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
+## Tools Used
+
+- **Language**: Python 3.14
+- **Data & stats**: pandas, numpy, statsmodels
+- **Machine learning**: scikit-learn
+- **Survival analysis**: lifelines
+- **Visualization**: matplotlib
+- **BI / reporting**: Power BI Desktop
+- **Version control**: Git / GitHub
+
+## Skills Demonstrated
+
+- Principled missing-data diagnosis (structural vs. random missingness)
+- Categorical encoding with deliberate, defensible reference categories
+- Propensity-score modeling and inverse probability weighting
+- Covariate balance diagnostics (standardized mean differences)
+- Cross-validated hyperparameter tuning and leakage-free model selection
+- Permutation feature importance
+- Subgroup / heterogeneous treatment effect testing with multiple-comparison awareness
+- Kaplan-Meier estimation and Cox proportional-hazards modeling with assumption checking
+- Power BI dashboard design for a non-technical, stakeholder audience
+- Git version control, including diagnosing and remediating an accidental commit
+
+## Limitations
+
+- Since this project used observational and not experimental data, unmeasured confounding may still exist. Adjustment accounts for every measured covariate, but some unmeasured factor could still influence both the RHC decision and the outcome.
+- Any patient not known to have died within 30 days is treated as censored at exactly day 30, not their true last-contact date. This is the dataset's real design and worth knowing before interpreting the survival results.
+- Some subgroups expressed covariate imbalance, even after adjustment. IPW weights are computed once and reused across subgroups for stability; three disease-category subgroups (CHF, Cirrhosis, COPD) show real residual covariate imbalance within them, so those three estimates should be trusted less than the overall and severity-tier results.
+- Two covariates violate the Cox model's proportional-hazards assumption, which can influence the model's accuracy. RHC's own hazard ratio does not, so the headline finding is unaffected.
+- Two disease categories were excluded (Colon cancer, Lung cancer) for having too few treated patients to produce a reliable estimate.
+
+## How to Run
+
+```bash
+pip install -r requirements.txt
+```
+
+The raw source file (`csv/rhc.csv`) isn't included (third-party data); obtain the RHC dataset independently and place it at `csv/rhc.csv`. Then run the pipeline in order:
+
+```bash
+python scripts/data_clean.py
+python scripts/eda_bias.py
+python scripts/propensity_effect.py
+python scripts/risk_model.py
+python scripts/subgroup_effects.py
+python scripts/survival_analysis.py
+python scripts/dashboard_export.py
+```
+
+Or, to just explore the dashboard: open `powerbi/rhc_dashboard.pbix` in Power BI Desktop (free).
+
+## Future Improvements
+
+- Expand this README's findings into a standalone, deeper technical report covering full methodology, defense of each design decision, and more intensive analysis of results
+- Add a sensitivity analysis for unmeasured confounding (e.g., an E-value) to quantify how strong an unmeasured confounder would need to be to explain away the result
+- Estimate the average treatment effect on the treated (ATT) as a complementary estimand to the ATE reported here
+- Can experiment with other models to handle covariates that violated constant hazard assumption
+
+## Author
+
+**Aaron Herrera** - [LinkedIn](https://www.linkedin.com/in/aaronherrera4/)
+
+## Credit
+
+As previously mentioned, this dataset comes from a previous study by Connors et al. (Connors et al., 1996, *JAMA*). The dataset for this project was downloaded at https://github.com/migariane/TutorialComputationalCausalInferenceEstimators. 
