@@ -6,11 +6,13 @@ Right heart catheterization (RHC) is a common but clinically disputed invasive I
 
 ## Dashboard Preview
 
+The Power BI dashboard's population overview page, filtered live using the disease-category and sex slicers:
+
 ![Patient Population Overview](powerbi/screenshots/population_slicer.gif)
 
 ## Problem
 
-Clinicians have never reached consensus on whether RHC helps or harms patients, the study this dataset comes from (Connors et al., 1996, *JAMA*) was itself part of that decades-long controversy. Framed as an analyst problem, this is a selection-bias question that shows up constantly outside healthcare too: *does this intervention/campaign/program actually work, or are the people who received it just different to begin with?*
+Clinicians have never reached consensus on whether RHC helps or harms patients, the study this dataset comes from (Connors et al., 1996, *JAMA*) was itself part of that decades-long controversy. Framed as an analyst problem, this is a selection-bias question that shows up constantly outside healthcare too, in marketing campaigns, product experiments, customer retention initiatives, and public policy evaluation: *does this intervention/campaign/program actually work, or are the people who received it just different to begin with?* Beyond causal inference, this project also demonstrates two other common analyst skillsets: predictive modelling (risk scoring) and segmentation/subgroup analysis.
 
 This project answered four specific questions:
 
@@ -28,10 +30,6 @@ This project answered four specific questions:
 3. A predictive model correctly classified 30-day mortality risk 74% of the time using only admission data. The strongest predictors were a pre-existing prognosis score, baseline functional health, DNR status, and liver function, largely consistent across both the predictive model and the survival model.
 
 4. RHC's effect was also examined across different types of patients, 7 disease categories and 3 severity levels, to see whether it worked better or worse for some groups than others. Although some groups appeared to respond differently at first glance, a direct statistical comparison found none of those differences were confirmed as real; the variation was consistent with chance rather than a proven pattern.
-
-## Why This Matters
-
-Although this project analyzes a healthcare dataset, the analytical techniques apply broadly across business domains. The central challenge—determining whether an intervention actually caused an outcome despite selection bias—is common in marketing campaigns, product experiments, customer retention initiatives, and public policy evaluation. This project demonstrates how causal inference can distinguish true treatment effects from misleading raw comparisons. The project also incorporates common methods used in analyst roles such as predictive modelling and segmentation/subgroup analysis. 
 
 ## Recommendations
 
@@ -85,7 +83,7 @@ Five columns had missing values; each was resolved based on *why* it was missing
 | `dthdte` | 35.1% | Left null | Structural, missing exactly for survivors |
 | `cat2` | 79.1% | Filled `"None"` | Missing means "no secondary diagnosis," not a gap |
 | `adld3p` | 74.9% | Dropped | No structural cause, too sparse to impute |
-| `urin1` | 52.8% | Dropped | Structural, missing exactly for survivors |
+| `urin1` | 52.8% | Dropped | No structural cause, too sparse to impute |
 | `dschdte` | 0.02% | Column dropped entirely | Unused anywhere downstream |
 
 Categorical variables were one-hot encoded from the raw text columns.
@@ -97,7 +95,7 @@ Outcome variables (`death`, `death_d30`, `survial_d30`) shipped pre-computed in 
 - **Causal inference**: Used propensity-score weighting to make the treatment and comparison groups statistically comparable before estimating RHC's effect on mortality.
 - **Predictive modelling**: Compared three machine learning models, selected the best-performing one using cross-validation, then evaluated it once on unseen data.
 - **Subgroup analysis**: Re-estimated the treatment effect separately across diagnoses and severity levels, then formally tested whether those differences were statistically real rather than eyeballing them.
-- **Survival analysis**: Modeled not just whether patients died, but when, and formally tested a key modelling assumption rather than taking it for granted.
+- **Survival analysis**: Modelled not just whether patients died, but when, and formally tested a key modelling assumption rather than taking it for granted.
 
 <!-- markdownlint-disable MD033 -->
 <details>
@@ -205,7 +203,7 @@ Or, to just explore the dashboard: open `powerbi/rhc_dashboard.pbix` in Power BI
 - Expand this README's findings into a standalone, deeper technical report covering full methodology, defense of each design decision, and more intensive analysis of results
 - Add a sensitivity analysis for unmeasured confounding (e.g., an E-value) to quantify how strong an unmeasured confounder would need to be to explain away the result
 - Estimate the average treatment effect on the treated (ATT) as a complementary estimand to the ATE reported here
-- Can experiment with other models to handle covariates that violated constant hazard assumption
+- Experiment with other models to handle covariates that violated the constant hazard assumption
 
 ## Author
 
