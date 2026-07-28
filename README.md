@@ -2,7 +2,7 @@
 
 ## Summary
 
-Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzed 5,735 ICU patients using causal inference, predictive modeling, and survival analysis to test whether RHC actually improved 30-day survival, or whether it just looked that way because sicker patients were more likely to receive it. Three independent statistical methods agreed: RHC was associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
+Right heart catheterization (RHC) is a common but clinically disputed invasive ICU procedure. This project analyzed 5,735 ICU patients using causal inference, predictive modeling, and survival analysis to test whether RHC actually improved 30-day survival, or whether it just looked that way because sicker patients were more likely to receive it. Three independent statistical methods reached the same conclusion: RHC was associated with a statistically significant increase in 30-day mortality risk, even after adjusting for how sick patients were at admission.
 
 ## Dashboard Preview
 
@@ -28,6 +28,10 @@ This project answered four specific questions:
 3. A predictive model correctly classified 30-day mortality risk 74% of the time using only admission data. The strongest predictors were a pre-existing prognosis score, baseline functional health, DNR status, and liver function, largely consistent across both the predictive model and the survival model.
 
 4. No patient subgroup showed a confirmed, statistically different RHC effect. RHC's effect was re-estimated within 7 disease categories and 3 severity tiers; a formal statistical test comparing all subgroups directly found no confirmed difference between them, the apparent variation was consistent with chance rather than a proven pattern.
+
+## Why This Matters
+
+Although this project analyzes a healthcare dataset, the analytical techniques apply broadly across business domains. The central challenge—determining whether an intervention actually caused an outcome despite selection bias—is common in marketing campaigns, product experiments, customer retention initiatives, and public policy evaluation. This project demonstrates how causal inference can distinguish true treatment effects from misleading raw comparisons. The project also incorporates common methods used in analyst roles such as predictive modelling and segmentation/subgroup analysis. 
 
 ## Recommendations
 
@@ -183,4 +187,4 @@ Or, to just explore the dashboard: open `powerbi/rhc_dashboard.pbix` in Power BI
 
 ## Credit
 
-As previously mentioned, this dataset comes from a previous study by Connors et al. (Connors et al., 1996, *JAMA*). The dataset for this project was downloaded at https://github.com/migariane/TutorialComputationalCausalInferenceEstimators. 
+As previously mentioned, this dataset comes from a previous study by Connors et al. (Connors et al., 1996, *JAMA*). The dataset for this project was downloaded at [this link](https://github.com/migariane/TutorialComputationalCausalInferenceEstimators).
